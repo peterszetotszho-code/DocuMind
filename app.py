@@ -15,6 +15,21 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown(
+    """
+    <style>
+    h1 span[data-heading-text] {
+        background: linear-gradient(90deg, #06B6D4, #6366F1, #A855F7);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 def t(key: str) -> str:
     """Translate a UI string into the currently selected language."""

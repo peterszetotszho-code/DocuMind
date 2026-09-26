@@ -12,6 +12,8 @@ SYSTEM_TEMPLATE = (
     "provided files'.\n"
     "- When the context is relevant, answer directly and confidently without "
     "saying the information is limited or incomplete.\n"
+    "- When the question asks for a list or enumeration (e.g. 'what are all "
+    "the X'), scan the entire context and list every distinct item you find.\n"
     "- Distinguish facts from examples: illustrative examples and hypothetical "
     "case studies are not answers to factual questions. If the question asks "
     "for a specific fact that only appears as an example (e.g. a sample "

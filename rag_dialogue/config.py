@@ -63,6 +63,7 @@ class Settings:
         default_factory=lambda: int(os.getenv("CHUNK_OVERLAP", "50"))
     )
     top_k: int = field(default_factory=lambda: int(os.getenv("TOP_K", "6")))
+    list_top_k: int = field(default_factory=lambda: int(os.getenv("LIST_TOP_K", "25")))
 
 
 settings = Settings()

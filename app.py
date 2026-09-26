@@ -4,6 +4,7 @@ import hashlib
 
 import streamlit as st
 
+from rag_dialogue.auth import authenticate
 from rag_dialogue.config import settings
 from rag_dialogue.i18n import LANGUAGE_LABELS, SUPPORTED_LANGUAGES, translate
 from rag_dialogue.knowledge_base import update_knowledge_base
@@ -36,26 +37,15 @@ def t(key: str) -> str:
     return translate(st.session_state.lang, key)
 
 
-# Language selection, persisted across reruns.
+# Session state initialization.
 if "lang" not in st.session_state:
     st.session_state.lang = "en"
-
-# Logo at the top of the sidebar.
-st.sidebar.markdown(
-    '<div style="text-align:center; font-size:3.2rem; line-height:1.1; '
-    'padding:0.4rem 0 0.6rem 0;">📚</div>',
-    unsafe_allow_html=True,
-)
-
-st.sidebar.selectbox(
-    translate(st.session_state.lang, "lang_label"),
-    options=list(SUPPORTED_LANGUAGES),
-    format_func=lambda code: LANGUAGE_LABELS[code],
-    key="lang",
-)
-
-st.title(t("title"))
-
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
+if "role" not in st.session_state:
+    st.session_state.role = ""
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "processed_files" not in st.session_state:
@@ -65,38 +55,91 @@ if "show_upload_success" not in st.session_state:
 if "uploader_reset" not in st.session_state:
     st.session_state.uploader_reset = 0
 
-# Sidebar: uploads are stored backend-side and indexed immediately. File names
-# are never shown; only a generic "upload successful" confirmation is displayed.
+
+def logout() -> None:
+    """Clear the session and return to the login screen."""
+    st.session_state.authenticated = False
+    st.session_state.username = ""
+    st.session_state.role = ""
+    st.session_state.messages = []
+    st.session_state.processed_files = {}
+
+
+# Sidebar: logo, language, and (when logged in) role + upload + logout.
 with st.sidebar:
-    st.header(t("kb_header"))
-    uploaded_files = st.file_uploader(
-        t("uploader_label"),
-        type=["txt", "md", "pdf"],
-        accept_multiple_files=True,
-        key=f"file_uploader_{st.session_state.uploader_reset}",
+    st.markdown(
+        '<div style="text-align:center; font-size:3.2rem; line-height:1.1; '
+        'padding:0.4rem 0 0.6rem 0;">📚</div>',
+        unsafe_allow_html=True,
     )
-    if uploaded_files:
-        settings.upload_dir.mkdir(parents=True, exist_ok=True)
-        new_files = []
-        for uploaded in uploaded_files:
-            digest = hashlib.md5(uploaded.getvalue()).hexdigest()
-            if st.session_state.processed_files.get(uploaded.name) != digest:
-                st.session_state.processed_files[uploaded.name] = digest
-                new_files.append(uploaded)
-        for uploaded in new_files:
-            (settings.upload_dir / uploaded.name).write_bytes(uploaded.getvalue())
-        if new_files:
-            update_knowledge_base()
-        # Reset the uploader and confirm, so file names are not shown.
-        st.session_state.show_upload_success = True
-        st.session_state.uploader_reset += 1
-        st.rerun()
 
-    if st.session_state.show_upload_success:
-        st.session_state.show_upload_success = False
-        st.success(t("upload_success"))
+    st.selectbox(
+        t("lang_label"),
+        options=list(SUPPORTED_LANGUAGES),
+        format_func=lambda code: LANGUAGE_LABELS[code],
+        key="lang",
+    )
 
-# Main area: chat interface with persisted history.
+    if st.session_state.authenticated:
+        st.caption(f"{t('logged_in_as')}: {t('role_' + st.session_state.role)}")
+
+        # Only administrators may upload documents into the knowledge base.
+        if st.session_state.role == "admin":
+            st.header(t("kb_header"))
+            uploaded_files = st.file_uploader(
+                t("uploader_label"),
+                type=["txt", "md", "pdf"],
+                accept_multiple_files=True,
+                key=f"file_uploader_{st.session_state.uploader_reset}",
+            )
+            if uploaded_files:
+                settings.upload_dir.mkdir(parents=True, exist_ok=True)
+                new_files = []
+                for uploaded in uploaded_files:
+                    digest = hashlib.md5(uploaded.getvalue()).hexdigest()
+                    if st.session_state.processed_files.get(uploaded.name) != digest:
+                        st.session_state.processed_files[uploaded.name] = digest
+                        new_files.append(uploaded)
+                for uploaded in new_files:
+                    (settings.upload_dir / uploaded.name).write_bytes(uploaded.getvalue())
+                if new_files:
+                    update_knowledge_base()
+                # Reset the uploader and confirm, so file names are not shown.
+                st.session_state.show_upload_success = True
+                st.session_state.uploader_reset += 1
+                st.rerun()
+
+            if st.session_state.show_upload_success:
+                st.session_state.show_upload_success = False
+                st.success(t("upload_success"))
+
+        if st.button(t("logout")):
+            logout()
+            st.rerun()
+
+
+# Main area: the title is always shown.
+st.title(t("title"))
+
+if not st.session_state.authenticated:
+    # Login form.
+    with st.form("login_form"):
+        username = st.text_input(t("username"))
+        password = st.text_input(t("password"), type="password")
+        submitted = st.form_submit_button(t("login"))
+    if submitted:
+        user = authenticate(username, password)
+        if user is not None:
+            st.session_state.authenticated = True
+            st.session_state.username = user["username"]
+            st.session_state.role = user["role"]
+            st.rerun()
+        else:
+            st.error(t("login_error"))
+    st.stop()
+
+
+# Chat interface (available to all authenticated users).
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])

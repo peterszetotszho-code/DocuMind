@@ -25,3 +25,11 @@ def test_translate_falls_back_to_english_for_unknown_language():
 def test_translate_all_supported_languages_resolve():
     for language in SUPPORTED_LANGUAGES:
         assert translate(language, "chat_placeholder")
+
+
+def test_translate_login_keys_resolve():
+    for language in SUPPORTED_LANGUAGES:
+        assert translate(language, "login")
+        assert translate(language, "logout")
+        assert translate(language, "username")
+        assert translate(language, "password")

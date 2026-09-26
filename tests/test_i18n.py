@@ -33,3 +33,5 @@ def test_translate_login_keys_resolve():
         assert translate(language, "logout")
         assert translate(language, "username")
         assert translate(language, "password")
+        assert translate(language, "username_placeholder")
+        assert translate(language, "password_placeholder")

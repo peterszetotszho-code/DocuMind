@@ -19,6 +19,9 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+    [data-testid="stApp"] {
+        background-color: #EEF2FF;
+    }
     h1 {
         text-align: center;
     }
@@ -59,7 +62,7 @@ def t(key: str) -> str:
 
 # Session state initialization.
 if "lang" not in st.session_state:
-    st.session_state.lang = "en"
+    st.session_state.lang = "zh-Hant"
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 if "username" not in st.session_state:
@@ -144,8 +147,8 @@ st.title(t("title"))
 if not st.session_state.authenticated:
     # Login form.
     with st.form("login_form"):
-        username = st.text_input(t("username"))
-        password = st.text_input(t("password"), type="password")
+        username = st.text_input(t("username"), placeholder=t("username_placeholder"))
+        password = st.text_input(t("password"), type="password", placeholder=t("password_placeholder"))
         submitted = st.form_submit_button(t("login"), use_container_width=True)
     if submitted:
         user = authenticate(username, password)

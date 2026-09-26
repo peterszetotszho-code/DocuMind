@@ -10,7 +10,7 @@ from rag_dialogue.knowledge_base import update_knowledge_base
 from rag_dialogue.rag_service import RAGService
 
 st.set_page_config(
-    page_title="RAG Knowledge Base Assistant",
+    page_title="Your AI Assistant",
     page_icon="📚",
     layout="wide",
 )
@@ -39,6 +39,13 @@ def t(key: str) -> str:
 # Language selection, persisted across reruns.
 if "lang" not in st.session_state:
     st.session_state.lang = "en"
+
+# Logo at the top of the sidebar.
+st.sidebar.markdown(
+    '<div style="text-align:center; font-size:3.2rem; line-height:1.1; '
+    'padding:0.4rem 0 0.6rem 0;">📚</div>',
+    unsafe_allow_html=True,
+)
 
 st.sidebar.selectbox(
     translate(st.session_state.lang, "lang_label"),

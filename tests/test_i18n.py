@@ -2,13 +2,12 @@ from rag_dialogue.i18n import SUPPORTED_LANGUAGES, translate
 
 
 def test_translate_english():
-    assert translate("en", "title") == "RAG Knowledge Base Assistant"
+    assert translate("en", "title") == "Your AI Assistant"
 
 
 def test_translate_traditional_chinese():
-    text = translate("zh-Hant", "title")
-    assert text
-    assert text != "RAG Knowledge Base Assistant"
+    # The title is intentionally the same in every language.
+    assert translate("zh-Hant", "title") == "Your AI Assistant"
 
 
 def test_translate_upload_success_english():
@@ -20,7 +19,7 @@ def test_translate_upload_success_traditional_chinese():
 
 
 def test_translate_falls_back_to_english_for_unknown_language():
-    assert translate("fr", "title") == "RAG Knowledge Base Assistant"
+    assert translate("fr", "title") == "Your AI Assistant"
 
 
 def test_translate_all_supported_languages_resolve():

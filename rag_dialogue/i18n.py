@@ -15,7 +15,7 @@ LANGUAGE_LABELS = {
 
 _TRANSLATIONS: dict[str, dict[str, str]] = {
     "en": {
-        "title": "RAG Knowledge Base Assistant",
+        "title": "Your AI Assistant",
         "lang_label": "Language",
         "kb_header": "Knowledge Base",
         "uploader_label": "Upload documents (.txt, .md, .pdf)",
@@ -24,7 +24,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "thinking": "Thinking...",
     },
     "zh-Hant": {
-        "title": "RAG 知識庫助理",
+        "title": "Your AI Assistant",
         "lang_label": "語言",
         "kb_header": "知識庫",
         "uploader_label": "上傳文件（.txt、.md、.pdf）",

@@ -7,6 +7,9 @@ with an LLM that answers using your documents as context.
 ## Features
 
 - Upload `.txt`, `.md`, and `.pdf` documents through a Streamlit UI.
+- Uploads are indexed automatically on upload; no separate button is needed.
+- Bilingual UI: switch between English and Traditional Chinese.
+- Uploaded files are stored backend-side and are never exposed in the UI.
 - Incremental indexing: files are hashed (MD5) so unchanged uploads are skipped.
 - Offline flow: load documents, split into chunks, embed, and store in Chroma.
 - Online flow: retrieve the most relevant chunks for each question.
@@ -58,8 +61,8 @@ streamlit run app.py
 
 ## Usage
 
-1. Use the sidebar to upload one or more documents.
-2. Click **Update knowledge base** to index new or changed files.
+1. Pick a language (English / 繁體中文) from the sidebar.
+2. Upload one or more documents; they are saved and indexed automatically.
 3. Ask questions in the chat box. Answers are generated from the retrieved
    document chunks.
 
@@ -78,6 +81,7 @@ rag_dialogue/
     knowledge_base.py           Incremental offline indexing
     prompts.py                  RAG prompt templates
     history.py                  In-memory conversation history
+    i18n.py                     UI translations (English / Traditional Chinese)
     rag_service.py              Retrieval + generation orchestration
 tests/                          Unit tests
 ```

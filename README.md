@@ -9,7 +9,7 @@ with an LLM that answers using your documents as context.
 - Upload `.txt`, `.md`, and `.pdf` documents through a Streamlit UI.
 - Uploads are indexed automatically on upload; no separate button is needed.
 - Bilingual UI: switch between English and Traditional Chinese.
-- Uploaded files are stored backend-side and are never exposed in the UI.
+- Uploaded files are stored backend-side; file names are not shown in the UI.
 - Incremental indexing: files are hashed (MD5) so unchanged uploads are skipped.
 - Offline flow: load documents, split into chunks, embed, and store in Chroma.
 - Online flow: retrieve the most relevant chunks for each question.

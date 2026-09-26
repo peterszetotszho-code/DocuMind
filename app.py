@@ -16,9 +16,9 @@ st.set_page_config(
 )
 
 
-def t(key: str, **kwargs: str) -> str:
+def t(key: str) -> str:
     """Translate a UI string into the currently selected language."""
-    return translate(st.session_state.lang, key, **kwargs)
+    return translate(st.session_state.lang, key)
 
 
 # Language selection, persisted across reruns.
@@ -36,17 +36,22 @@ st.title(t("title"))
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
-
 if "processed_files" not in st.session_state:
     st.session_state.processed_files = {}
+if "show_upload_success" not in st.session_state:
+    st.session_state.show_upload_success = False
+if "uploader_reset" not in st.session_state:
+    st.session_state.uploader_reset = 0
 
-# Sidebar: uploads are stored backend-side and indexed immediately.
+# Sidebar: uploads are stored backend-side and indexed immediately. File names
+# are never shown; only a generic "upload successful" confirmation is displayed.
 with st.sidebar:
     st.header(t("kb_header"))
     uploaded_files = st.file_uploader(
         t("uploader_label"),
         type=["txt", "md", "pdf"],
         accept_multiple_files=True,
+        key=f"file_uploader_{st.session_state.uploader_reset}",
     )
     if uploaded_files:
         settings.upload_dir.mkdir(parents=True, exist_ok=True)
@@ -59,11 +64,15 @@ with st.sidebar:
         for uploaded in new_files:
             (settings.upload_dir / uploaded.name).write_bytes(uploaded.getvalue())
         if new_files:
-            indexed = update_knowledge_base()
-            if indexed:
-                st.success(t("upload_success", n=len(indexed)))
-            else:
-                st.info(t("upload_empty"))
+            update_knowledge_base()
+        # Reset the uploader and confirm, so file names are not shown.
+        st.session_state.show_upload_success = True
+        st.session_state.uploader_reset += 1
+        st.rerun()
+
+    if st.session_state.show_upload_success:
+        st.session_state.show_upload_success = False
+        st.success(t("upload_success"))
 
 # Main area: chat interface with persisted history.
 for message in st.session_state.messages:

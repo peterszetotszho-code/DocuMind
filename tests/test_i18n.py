@@ -11,8 +11,12 @@ def test_translate_traditional_chinese():
     assert text != "RAG Knowledge Base Assistant"
 
 
-def test_translate_formats_placeholders():
-    assert translate("en", "upload_success", n=3) == "Uploaded and indexed 3 file(s)."
+def test_translate_upload_success_english():
+    assert translate("en", "upload_success") == "Upload successful."
+
+
+def test_translate_upload_success_traditional_chinese():
+    assert translate("zh-Hant", "upload_success") == "上傳成功。"
 
 
 def test_translate_falls_back_to_english_for_unknown_language():

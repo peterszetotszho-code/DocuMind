@@ -20,7 +20,7 @@ with an LLM that answers using your documents as context.
 | Layer        | Tool                                        |
 | ------------ | ------------------------------------------- |
 | LLM          | DeepSeek (`deepseek-chat`) via OpenAI API   |
-| Embeddings   | Ollama (`nomic-embed-text`), local          |
+| Embeddings   | Ollama (`bge-m3`, multilingual), local       |
 | Vector store | Chroma, persisted locally                   |
 | Framework    | LangChain                                   |
 | UI           | Streamlit                                   |
@@ -42,7 +42,7 @@ pip install -r requirements.txt
 ### 2. Start Ollama and pull the embedding model
 
 ```bash
-ollama pull nomic-embed-text
+ollama pull bge-m3
 ```
 
 ### 3. Configure environment variables
@@ -96,5 +96,8 @@ python -m pytest
 
 - The embedding model runs locally through Ollama and does not require an API
   key. The DeepSeek key is only used for answer generation.
+- `bge-m3` is used for embeddings because it supports Chinese (unlike
+  `nomic-embed-text`, which is English-centric). For English-only documents,
+  `nomic-embed-text` is a faster alternative.
 - When a file changes, its new chunks are appended to the vector store. For
   production use, replace this with a per-source delete-and-reindex step.

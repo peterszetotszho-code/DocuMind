@@ -1,6 +1,6 @@
 from langchain_core.documents import Document
 
-from rag_dialogue.text_splitter import split_documents
+from rag_dialogue.text_splitter import SEPARATORS, split_documents
 
 
 def test_split_long_document_into_chunks():
@@ -9,3 +9,8 @@ def test_split_long_document_into_chunks():
     chunks = split_documents([document])
     assert len(chunks) > 1
     assert all(chunk.page_content for chunk in chunks)
+
+
+def test_separators_include_chinese_sentence_boundaries():
+    for punctuation in ("。", "！", "？", "；", "，"):
+        assert punctuation in SEPARATORS

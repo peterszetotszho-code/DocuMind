@@ -39,7 +39,7 @@ class Settings:
         default_factory=lambda: os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     )
     embedding_model: str = field(
-        default_factory=lambda: os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
+        default_factory=lambda: os.getenv("EMBEDDING_MODEL", "bge-m3")
     )
 
     # Filesystem locations.
@@ -62,7 +62,7 @@ class Settings:
     chunk_overlap: int = field(
         default_factory=lambda: int(os.getenv("CHUNK_OVERLAP", "50"))
     )
-    top_k: int = field(default_factory=lambda: int(os.getenv("TOP_K", "4")))
+    top_k: int = field(default_factory=lambda: int(os.getenv("TOP_K", "6")))
 
 
 settings = Settings()

@@ -77,8 +77,8 @@ if "role" not in st.session_state:
     st.session_state.role = ""
 if "messages" not in st.session_state:
     st.session_state.messages = []
-if "processed_files" not in st.session_state:
-    st.session_state.processed_files = {}
+if "upload_snapshot" not in st.session_state:
+    st.session_state.upload_snapshot = ()
 
 
 def logout() -> None:
@@ -87,7 +87,7 @@ def logout() -> None:
     st.session_state.username = ""
     st.session_state.role = ""
     st.session_state.messages = []
-    st.session_state.processed_files = {}
+    st.session_state.upload_snapshot = ()
 
 
 # Sidebar: logo, language, and (when logged in) role + upload + logout.
@@ -119,17 +119,23 @@ with st.sidebar:
             )
             if uploaded_files:
                 settings.upload_dir.mkdir(parents=True, exist_ok=True)
-                new_files = []
-                for uploaded in uploaded_files:
-                    digest = hashlib.md5(uploaded.getvalue()).hexdigest()
-                    if st.session_state.processed_files.get(uploaded.name) != digest:
-                        st.session_state.processed_files[uploaded.name] = digest
-                        new_files.append(uploaded)
-                for uploaded in new_files:
-                    (settings.upload_dir / uploaded.name).write_bytes(uploaded.getvalue())
-                if new_files:
-                    update_knowledge_base()
-                    st.success(t("upload_success"))
+                entries = tuple(sorted(
+                    (uploaded.name, hashlib.md5(uploaded.getvalue()).hexdigest())
+                    for uploaded in uploaded_files
+                ))
+
+                is_new_upload = entries != st.session_state.upload_snapshot
+
+                if is_new_upload:
+                    for uploaded in uploaded_files:
+                        (settings.upload_dir / uploaded.name).write_bytes(uploaded.getvalue())
+                    indexed = update_knowledge_base()
+                    if indexed:
+                        st.success(t("upload_success"))
+                    else:
+                        st.info(t("upload_duplicate"))
+
+                st.session_state.upload_snapshot = entries
 
         if st.button(t("logout")):
             logout()

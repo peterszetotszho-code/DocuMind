@@ -19,9 +19,6 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    [data-testid="stApp"] {
-        background-color: #EEF2FF;
-    }
     h1 {
         text-align: center;
     }
@@ -37,10 +34,10 @@ st.markdown(
         max-width: 400px;
         margin: 1rem auto;
         padding: 2rem;
-        border: 1px solid #E5E7EB;
+        border: 1px solid #1F2A44;
         border-radius: 16px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-        background: #FFFFFF;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        background: #131C31;
     }
     /* Full-width login button. */
     [data-testid="stFormSubmitButton"] {

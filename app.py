@@ -44,6 +44,10 @@ st.markdown(
         border: 1px solid #0EA5B7;
         border-radius: 8px;
     }
+    /* Hide the uploaded file name chips; only the success message shows. */
+    [data-testid="stFileChip"] {
+        display: none;
+    }
     /* Full-width login button. */
     [data-testid="stFormSubmitButton"] {
         width: 100%;
@@ -75,10 +79,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "processed_files" not in st.session_state:
     st.session_state.processed_files = {}
-if "show_upload_success" not in st.session_state:
-    st.session_state.show_upload_success = False
-if "uploader_reset" not in st.session_state:
-    st.session_state.uploader_reset = 0
 
 
 def logout() -> None:
@@ -115,7 +115,7 @@ with st.sidebar:
                 t("uploader_label"),
                 type=["txt", "md", "pdf"],
                 accept_multiple_files=True,
-                key=f"file_uploader_{st.session_state.uploader_reset}",
+                key="file_uploader",
             )
             if uploaded_files:
                 settings.upload_dir.mkdir(parents=True, exist_ok=True)
@@ -129,14 +129,7 @@ with st.sidebar:
                     (settings.upload_dir / uploaded.name).write_bytes(uploaded.getvalue())
                 if new_files:
                     update_knowledge_base()
-                # Reset the uploader and confirm, so file names are not shown.
-                st.session_state.show_upload_success = True
-                st.session_state.uploader_reset += 1
-                st.rerun()
-
-            if st.session_state.show_upload_success:
-                st.session_state.show_upload_success = False
-                st.success(t("upload_success"))
+                    st.success(t("upload_success"))
 
         if st.button(t("logout")):
             logout()

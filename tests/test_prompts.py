@@ -4,7 +4,12 @@ from rag_dialogue.prompts import SYSTEM_TEMPLATE, build_messages
 def test_system_template_encourages_inference():
     lowered = SYSTEM_TEMPLATE.lower()
     assert "infer" in lowered
-    assert "not available" in lowered
+
+
+def test_system_template_natural_dont_know_tone():
+    lowered = SYSTEM_TEMPLATE.lower()
+    assert "naturally" in lowered
+    assert "unrelated" in lowered
 
 
 def test_system_template_distinguishes_facts_from_examples():

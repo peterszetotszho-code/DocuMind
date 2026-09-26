@@ -20,9 +20,9 @@ SYSTEM_TEMPLATE = (
     "- You may summarize, compare, and draw reasonable inferences, but base "
     "every conclusion on explicit statements and do not over-infer or invent "
     "unsupported facts.\n"
-    "- Only say the information is not available in the documents when the "
-    "question is clearly unrelated to the context, or the context contains "
-    "nothing relevant."
+    "- When the question is clearly unrelated to the context, or the context "
+    "contains nothing relevant, respond naturally and briefly like a person "
+    "who does not know the answer, rather than a stiff formal statement."
 )
 
 

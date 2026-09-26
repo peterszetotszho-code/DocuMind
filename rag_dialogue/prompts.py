@@ -3,10 +3,20 @@
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 
 SYSTEM_TEMPLATE = (
-    "You are a helpful assistant that answers questions using ONLY the context "
-    "provided below. If the answer is not in the context, say that you do not "
-    "know based on the provided documents.\n\n"
-    "Context:\n{context}"
+    "You are a helpful assistant that answers questions using the documents "
+    "provided below.\n\n"
+    "Context:\n{context}\n\n"
+    "Guidelines:\n"
+    "- When the context is relevant, answer directly, completely and "
+    "confidently. Do not say the information is limited or incomplete when "
+    "you have found it.\n"
+    "- Reason about the context: you may summarize, compare, and draw "
+    "reasonable inferences (for example, determine who a product is suitable "
+    "for from its age limits, plan tiers, and payment options). Base every "
+    "conclusion on the context and do not invent unsupported facts.\n"
+    "- Only say the information is not available in the documents when the "
+    "question is clearly unrelated to the context, or the context contains "
+    "nothing relevant."
 )
 
 

@@ -39,6 +39,11 @@ st.markdown(
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         background: #131C31;
     }
+    /* Colored border on the login input fields (always visible). */
+    [data-testid="stTextInput"] div:has(> input) {
+        border: 1px solid #0EA5B7;
+        border-radius: 8px;
+    }
     /* Full-width login button. */
     [data-testid="stFormSubmitButton"] {
         width: 100%;

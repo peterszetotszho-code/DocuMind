@@ -7,6 +7,12 @@ def test_system_template_encourages_inference():
     assert "not available" in lowered
 
 
+def test_system_template_distinguishes_facts_from_examples():
+    lowered = SYSTEM_TEMPLATE.lower()
+    assert "example" in lowered
+    assert "over-infer" in lowered
+
+
 def test_build_messages_injects_context_and_question():
     messages = build_messages(context="ctx text", question="what?")
     assert "ctx text" in messages[0].content

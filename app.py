@@ -19,12 +19,32 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+    h1 {
+        text-align: center;
+    }
     h1 span[data-heading-text] {
         background: linear-gradient(90deg, #06B6D4, #6366F1, #A855F7);
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
         color: transparent;
+    }
+    /* Compact, centered login card. */
+    [data-testid="stForm"] {
+        max-width: 400px;
+        margin: 1rem auto;
+        padding: 2rem;
+        border: 1px solid #E5E7EB;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        background: #FFFFFF;
+    }
+    /* Full-width login button. */
+    [data-testid="stFormSubmitButton"] {
+        width: 100%;
+    }
+    [data-testid="stFormSubmitButton"] button {
+        width: 100%;
     }
     </style>
     """,
@@ -126,7 +146,7 @@ if not st.session_state.authenticated:
     with st.form("login_form"):
         username = st.text_input(t("username"))
         password = st.text_input(t("password"), type="password")
-        submitted = st.form_submit_button(t("login"))
+        submitted = st.form_submit_button(t("login"), use_container_width=True)
     if submitted:
         user = authenticate(username, password)
         if user is not None:

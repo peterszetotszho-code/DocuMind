@@ -212,7 +212,7 @@ if prompt := st.chat_input(t("chat_placeholder")):
         with st.spinner(t("thinking")):
             if st.session_state.get("use_agent", False):
                 logger = AgentCallLogger()
-                answer = st.write_stream(stream_agent(prompt, logger, language))
+                answer = st.write_stream(stream_agent(prompt, logger, language, history))
                 if logger.steps:
                     with st.expander(t("agent_steps")):
                         for step in logger.steps:

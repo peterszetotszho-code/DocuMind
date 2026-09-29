@@ -3,7 +3,7 @@
 from collections.abc import Iterator
 
 from langchain_core.callbacks import BaseCallbackHandler
-from langchain_core.messages import AIMessage, AIMessageChunk
+from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage, HumanMessage
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 
@@ -49,6 +49,13 @@ class AgentCallLogger(BaseCallbackHandler):
         self.steps.append(f"📄 工具結果：{str(output)[:200]}")
 
 
+def _build_messages(question: str, history: list[BaseMessage] | None) -> list:
+    """Combine prior turns with the current question."""
+    messages = list(history or [])
+    messages.append(HumanMessage(content=question))
+    return messages
+
+
 def get_agent(language: str = "the language of the question"):
     """Build a ReAct agent with the knowledge-base tools."""
     prompt = f"You are a helpful assistant. Respond in {language}."
@@ -59,10 +66,14 @@ def get_agent(language: str = "the language of the question"):
     )
 
 
-def run_agent(question: str, language: str = "the language of the question") -> str:
+def run_agent(
+    question: str,
+    language: str = "the language of the question",
+    history: list[BaseMessage] | None = None,
+) -> str:
     """Run the agent (non-streaming) and return its final answer."""
     agent = get_agent(language)
-    result = agent.invoke({"messages": [("user", question)]})
+    result = agent.invoke({"messages": _build_messages(question, history)})
     for message in reversed(result["messages"]):
         if isinstance(message, AIMessage) and message.content:
             return message.content
@@ -73,6 +84,7 @@ def stream_agent(
     question: str,
     logger: AgentCallLogger | None = None,
     language: str = "the language of the question",
+    history: list[BaseMessage] | None = None,
 ) -> Iterator[str]:
     """Stream the agent's final answer token by token.
 
@@ -81,7 +93,7 @@ def stream_agent(
     logger = logger or AgentCallLogger()
     agent = get_agent(language)
     for chunk, _metadata in agent.stream(
-        {"messages": [("user", question)]},
+        {"messages": _build_messages(question, history)},
         stream_mode="messages",
         config={"callbacks": [logger]},
     ):

@@ -1,4 +1,4 @@
-"""Persist chat conversations to a JSON file."""
+"""Persist per-user chat conversations to a JSON file."""
 
 import json
 from datetime import datetime
@@ -12,22 +12,34 @@ def conversations_path() -> Path:
     return settings.kb_index_path.parent / "conversations.json"
 
 
-def load_conversations() -> list[dict]:
-    """Load all saved conversations (an empty list when none exist)."""
+def _load_all() -> dict:
+    """Load the whole ``{username: [conversation, ...]}`` mapping."""
     path = conversations_path()
     if not path.exists():
-        return []
+        return {}
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def save_conversations(conversations: list[dict]) -> None:
-    """Persist the conversations to disk as JSON."""
+def _save_all(data: dict) -> None:
+    """Persist the whole username-to-conversations mapping to disk."""
     path = conversations_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        json.dumps(conversations, ensure_ascii=False, indent=2),
+        json.dumps(data, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+
+
+def load_conversations(username: str) -> list[dict]:
+    """Return the conversations belonging to a user (empty when none)."""
+    return _load_all().get(username, [])
+
+
+def save_conversations(username: str, conversations: list[dict]) -> None:
+    """Persist a user's conversations, leaving other users untouched."""
+    data = _load_all()
+    data[username] = conversations
+    _save_all(data)
 
 
 def new_conversation() -> dict:

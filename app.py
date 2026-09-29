@@ -120,7 +120,17 @@ def _persist_current_conversation() -> None:
     conversation["messages"] = _messages_from_history(st.session_state.chat_history)
     if conversation["title"] == "新對話" and st.session_state.chat_history.messages:
         conversation["title"] = st.session_state.chat_history.messages[0].content[:20]
-    save_conversations(st.session_state.conversations)
+    save_conversations(st.session_state.username, st.session_state.conversations)
+
+
+def _load_user_conversations(username: str) -> None:
+    """Load a user's conversations into the session, creating one if empty."""
+    conversations = load_conversations(username)
+    if not conversations:
+        conversations = [new_conversation()]
+    st.session_state.conversations = conversations
+    st.session_state.current_id = conversations[-1]["id"]
+    st.session_state.chat_history = _history_from_messages(conversations[-1]["messages"])
 
 
 # Session state initialization.
@@ -133,13 +143,11 @@ if "username" not in st.session_state:
 if "role" not in st.session_state:
     st.session_state.role = ""
 if "conversations" not in st.session_state:
-    st.session_state.conversations = load_conversations()
-    if not st.session_state.conversations:
-        st.session_state.conversations = [new_conversation()]
-    st.session_state.current_id = st.session_state.conversations[-1]["id"]
-    st.session_state.chat_history = _history_from_messages(
-        st.session_state.conversations[-1]["messages"]
-    )
+    st.session_state.conversations = []
+if "current_id" not in st.session_state:
+    st.session_state.current_id = None
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = InMemoryChatMessageHistory()
 if "upload_snapshot" not in st.session_state:
     st.session_state.upload_snapshot = ()
 
@@ -149,6 +157,9 @@ def logout() -> None:
     st.session_state.authenticated = False
     st.session_state.username = ""
     st.session_state.role = ""
+    st.session_state.conversations = []
+    st.session_state.current_id = None
+    st.session_state.chat_history = InMemoryChatMessageHistory()
     st.session_state.upload_snapshot = ()
 
 
@@ -177,7 +188,7 @@ with st.sidebar:
             st.session_state.conversations.append(conversation)
             st.session_state.current_id = conversation["id"]
             st.session_state.chat_history = InMemoryChatMessageHistory()
-            save_conversations(st.session_state.conversations)
+            save_conversations(st.session_state.username, st.session_state.conversations)
             st.rerun()
 
         titles = [conversation["title"] for conversation in st.session_state.conversations]
@@ -255,6 +266,7 @@ if not st.session_state.authenticated:
             st.session_state.authenticated = True
             st.session_state.username = user["username"]
             st.session_state.role = user["role"]
+            _load_user_conversations(user["username"])
             st.rerun()
         else:
             st.error(t("login_error"))

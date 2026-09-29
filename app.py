@@ -264,11 +264,11 @@ with st.sidebar:
             else:
                 st.caption(t("no_files"))
 
-        st.checkbox(t("agent_mode"), value=True, key="use_agent")
-
         if st.button(t("logout")):
             logout()
             st.rerun()
+
+        st.checkbox(t("agent_mode"), value=True, key="use_agent")
 
 
 # Main area: the title is always shown.

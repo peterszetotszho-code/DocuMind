@@ -16,11 +16,23 @@ def get_vector_store() -> Chroma:
     )
 
 
+def get_retriever(k: int | None = None):
+    """Return a similarity-search retriever backed by the Chroma store."""
+    return get_vector_store().as_retriever(
+        search_kwargs={"k": k or settings.top_k}
+    )
+
+
 def add_documents(documents: list[Document]) -> None:
     """Embed and persist documents into the vector store."""
     if not documents:
         return
     get_vector_store().add_documents(documents)
+
+
+def delete_by_source(source: str) -> None:
+    """Remove all chunks whose ``source`` metadata matches the given path."""
+    get_vector_store().delete(where={"source": source})
 
 
 def retrieve(query: str, k: int | None = None) -> list[Document]:

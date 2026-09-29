@@ -7,7 +7,7 @@ from rag_dialogue.config import settings
 from rag_dialogue.document_loaders import SUPPORTED_SUFFIXES, load_document
 from rag_dialogue.md5_util import get_file_md5
 from rag_dialogue.text_splitter import split_documents
-from rag_dialogue.vector_store import add_documents
+from rag_dialogue.vector_store import add_documents, delete_by_source
 
 
 def load_index() -> dict[str, str]:
@@ -54,3 +54,16 @@ def update_knowledge_base() -> list[str]:
         processed.append(path.name)
     save_index(index)
     return processed
+
+
+def delete_document(filename: str) -> None:
+    """Remove a file from the knowledge base, the vector store, and disk."""
+    index = load_index()
+    index.pop(filename, None)
+    save_index(index)
+
+    delete_by_source(str(settings.upload_dir / filename))
+
+    file_path = settings.upload_dir / filename
+    if file_path.exists():
+        file_path.unlink()

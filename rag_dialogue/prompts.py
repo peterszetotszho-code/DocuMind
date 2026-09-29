@@ -1,6 +1,6 @@
 """Prompt templates used by the RAG pipeline."""
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 SYSTEM_TEMPLATE = (
     "You are a helpful assistant that answers questions using the documents "
@@ -27,24 +27,12 @@ SYSTEM_TEMPLATE = (
     "who does not know the answer, rather than a stiff formal statement."
 )
 
-
-def build_messages(
-    context: str,
-    question: str,
-    history: list[tuple[str, str]] | None = None,
-) -> list[BaseMessage]:
-    """Build the ordered message list sent to the chat model.
-
-    ``history`` is an optional list of ``(role, content)`` turns where the role
-    is ``"human"`` or ``"ai"`` (``"user"``/``"assistant"`` are also accepted).
-    """
-    messages: list[BaseMessage] = [
-        SystemMessage(content=SYSTEM_TEMPLATE.format(context=context))
+# LCEL-friendly prompt: the conversation history is injected as a list of
+# messages via MessagesPlaceholder (LangChain's memory mechanism).
+RAG_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        ("system", SYSTEM_TEMPLATE),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{question}"),
     ]
-    for role, content in history or []:
-        if role in {"ai", "assistant"}:
-            messages.append(AIMessage(content=content))
-        else:
-            messages.append(HumanMessage(content=content))
-    messages.append(HumanMessage(content=question))
-    return messages
+)

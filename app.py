@@ -180,7 +180,6 @@ with st.sidebar:
 
     if st.session_state.authenticated:
         st.caption(f"{t('logged_in_as')}: {t('role_' + st.session_state.role)}")
-        st.checkbox(t("agent_mode"), key="use_agent")
 
         # Conversation management: start a new chat or switch to an old one.
         if st.button("➕ " + t("new_chat")):
@@ -264,6 +263,8 @@ with st.sidebar:
                     st.rerun()
             else:
                 st.caption(t("no_files"))
+
+        st.checkbox(t("agent_mode"), value=True, key="use_agent")
 
         if st.button(t("logout")):
             logout()

@@ -9,6 +9,11 @@ from langchain_core.chat_history import InMemoryChatMessageHistory
 from rag_dialogue.agent import AgentCallLogger, stream_agent
 from rag_dialogue.auth import authenticate
 from rag_dialogue.config import settings
+from rag_dialogue.conversation_store import (
+    load_conversations,
+    new_conversation,
+    save_conversations,
+)
 from rag_dialogue.i18n import LANGUAGE_LABELS, SUPPORTED_LANGUAGES, translate
 from rag_dialogue.knowledge_base import (
     delete_document,
@@ -79,6 +84,45 @@ def t(key: str) -> str:
     return translate(st.session_state.lang, key)
 
 
+def _history_from_messages(messages: list[dict]) -> InMemoryChatMessageHistory:
+    """Rebuild a chat history from serialized messages."""
+    history = InMemoryChatMessageHistory()
+    for message in messages:
+        if message["role"] == "user":
+            history.add_user_message(message["content"])
+        else:
+            history.add_ai_message(message["content"])
+    return history
+
+
+def _messages_from_history(history: InMemoryChatMessageHistory) -> list[dict]:
+    """Serialize a chat history into JSON-friendly messages."""
+    return [
+        {
+            "role": "user" if message.type == "human" else "assistant",
+            "content": message.content,
+        }
+        for message in history.messages
+    ]
+
+
+def _current_conversation() -> dict:
+    return next(
+        conversation
+        for conversation in st.session_state.conversations
+        if conversation["id"] == st.session_state.current_id
+    )
+
+
+def _persist_current_conversation() -> None:
+    """Save the current conversation (messages + title) to disk."""
+    conversation = _current_conversation()
+    conversation["messages"] = _messages_from_history(st.session_state.chat_history)
+    if conversation["title"] == "新對話" and st.session_state.chat_history.messages:
+        conversation["title"] = st.session_state.chat_history.messages[0].content[:20]
+    save_conversations(st.session_state.conversations)
+
+
 # Session state initialization.
 if "lang" not in st.session_state:
     st.session_state.lang = "zh-Hant"
@@ -88,8 +132,14 @@ if "username" not in st.session_state:
     st.session_state.username = ""
 if "role" not in st.session_state:
     st.session_state.role = ""
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = InMemoryChatMessageHistory()
+if "conversations" not in st.session_state:
+    st.session_state.conversations = load_conversations()
+    if not st.session_state.conversations:
+        st.session_state.conversations = [new_conversation()]
+    st.session_state.current_id = st.session_state.conversations[-1]["id"]
+    st.session_state.chat_history = _history_from_messages(
+        st.session_state.conversations[-1]["messages"]
+    )
 if "upload_snapshot" not in st.session_state:
     st.session_state.upload_snapshot = ()
 
@@ -99,7 +149,6 @@ def logout() -> None:
     st.session_state.authenticated = False
     st.session_state.username = ""
     st.session_state.role = ""
-    st.session_state.chat_history = InMemoryChatMessageHistory()
     st.session_state.upload_snapshot = ()
 
 
@@ -121,6 +170,29 @@ with st.sidebar:
     if st.session_state.authenticated:
         st.caption(f"{t('logged_in_as')}: {t('role_' + st.session_state.role)}")
         st.checkbox(t("agent_mode"), key="use_agent")
+
+        # Conversation management: start a new chat or switch to an old one.
+        if st.button("➕ " + t("new_chat")):
+            conversation = new_conversation()
+            st.session_state.conversations.append(conversation)
+            st.session_state.current_id = conversation["id"]
+            st.session_state.chat_history = InMemoryChatMessageHistory()
+            save_conversations(st.session_state.conversations)
+            st.rerun()
+
+        titles = [conversation["title"] for conversation in st.session_state.conversations]
+        if titles:
+            current_title = _current_conversation()["title"]
+            if current_title not in titles:
+                current_title = titles[-1]
+            chosen = st.selectbox(t("history"), titles, index=titles.index(current_title))
+            chosen_conversation = st.session_state.conversations[titles.index(chosen)]
+            if chosen_conversation["id"] != st.session_state.current_id:
+                st.session_state.current_id = chosen_conversation["id"]
+                st.session_state.chat_history = _history_from_messages(
+                    chosen_conversation["messages"]
+                )
+                st.rerun()
 
         # Only administrators may upload documents into the knowledge base.
         if st.session_state.role == "admin":
@@ -224,3 +296,4 @@ if prompt := st.chat_input(t("chat_placeholder")):
                     st.caption(f"{t('sources')}: " + ", ".join(sources))
 
     st.session_state.chat_history.add_ai_message(answer)
+    _persist_current_conversation()

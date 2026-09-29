@@ -5,6 +5,31 @@ LangChain and LangGraph. Upload documents, index them into a local vector
 store, and ask questions — answered using your documents as context. Includes
 a ReAct agent, per-user conversation history, and role-based access.
 
+## Demo
+
+![DocuMind demo — log in, ask a question, get a cited answer](assets/demo.gif)
+
+The demo asks *"What products does Acme Analytics offer?"* against the sample
+document in [`sample_data/`](sample_data/), showing the login flow, retrieval,
+streaming, and source citations.
+
+<details>
+<summary>📸 Screenshots</summary>
+
+**Login screen** (role-based access: `admin` uploads, `user` only asks)
+
+![Login screen](assets/login.png)
+
+**Chat interface after login**
+
+![Chat interface](assets/chat.png)
+
+**Question answered with source citations**
+
+![Answer with sources](assets/answer.png)
+
+</details>
+
 ## Features
 
 - Upload `.txt`, `.md`, and `.pdf` documents and index them automatically.
@@ -65,6 +90,8 @@ streamlit run app.py
 2. As an admin, upload documents to index them.
 3. Ask questions in the chat box; switch on Agent mode at the bottom of the
    sidebar for a tool-using ReAct agent.
+4. To try it right away, upload the sample document in
+   [`sample_data/`](sample_data/).
 
 ## Project structure
 
@@ -85,6 +112,8 @@ rag_dialogue/
     rag_service.py              LCEL retrieval + generation
     text_splitter.py            Document chunking
     vector_store.py             Chroma store, retriever, deletion
+assets/                         Demo GIF and screenshots
+sample_data/                    Sample document for a quick try
 tests/                          Unit tests
 ```
 

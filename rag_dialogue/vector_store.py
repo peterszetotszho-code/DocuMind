@@ -7,13 +7,24 @@ from rag_dialogue.config import settings
 from rag_dialogue.embeddings import get_embeddings
 
 
+_store: Chroma | None = None
+
+
 def get_vector_store() -> Chroma:
-    """Return a Chroma store persisted under the configured directory."""
-    settings.chroma_dir.mkdir(parents=True, exist_ok=True)
-    return Chroma(
-        persist_directory=str(settings.chroma_dir),
-        embedding_function=get_embeddings(),
-    )
+    """Return a shared Chroma store (created once and reused).
+
+    The instance is cached to avoid repeatedly opening and closing the
+    underlying client, which races when called from multiple threads
+    (e.g. inside a LangGraph agent's tool executor).
+    """
+    global _store
+    if _store is None:
+        settings.chroma_dir.mkdir(parents=True, exist_ok=True)
+        _store = Chroma(
+            persist_directory=str(settings.chroma_dir),
+            embedding_function=get_embeddings(),
+        )
+    return _store
 
 
 def get_retriever(k: int | None = None):

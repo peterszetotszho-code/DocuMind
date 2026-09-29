@@ -6,7 +6,7 @@ import streamlit as st
 
 from langchain_core.chat_history import InMemoryChatMessageHistory
 
-from rag_dialogue.agent import run_agent
+from rag_dialogue.agent import AgentCallLogger, stream_agent
 from rag_dialogue.auth import authenticate
 from rag_dialogue.config import settings
 from rag_dialogue.i18n import LANGUAGE_LABELS, SUPPORTED_LANGUAGES, translate
@@ -16,6 +16,12 @@ from rag_dialogue.knowledge_base import (
     update_knowledge_base,
 )
 from rag_dialogue.rag_service import RAGService
+from rag_dialogue.vector_store import get_vector_store
+
+# Pre-warm the Chroma client in the main thread. LangGraph runs agent tools in
+# worker threads where Chroma's client lifecycle races, so creating the client
+# up front avoids that race.
+get_vector_store()
 
 st.set_page_config(
     page_title="Your AI Assistant",
@@ -200,8 +206,12 @@ if prompt := st.chat_input(t("chat_placeholder")):
     with st.chat_message("assistant"):
         with st.spinner(t("thinking")):
             if st.session_state.get("use_agent", False):
-                answer = run_agent(prompt)
-                st.markdown(answer)
+                logger = AgentCallLogger()
+                answer = st.write_stream(stream_agent(prompt, logger))
+                if logger.steps:
+                    with st.expander(t("agent_steps")):
+                        for step in logger.steps:
+                            st.write(step)
             else:
                 answer = st.write_stream(service.stream(prompt, history=history))
                 sources = service.sources(prompt)

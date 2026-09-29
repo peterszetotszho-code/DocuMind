@@ -18,6 +18,12 @@ def test_system_template_distinguishes_facts_from_examples():
     assert "over-infer" in lowered
 
 
+def test_system_template_handles_recommendations():
+    lowered = SYSTEM_TEMPLATE.lower()
+    assert "recommendation" in lowered
+    assert "advice" in lowered
+
+
 def test_rag_prompt_declares_context_question_and_history():
     assert "context" in RAG_PROMPT.input_variables
     assert "question" in RAG_PROMPT.input_variables

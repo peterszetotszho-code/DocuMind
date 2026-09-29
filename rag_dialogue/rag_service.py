@@ -93,6 +93,17 @@ class RAGService:
             | StrOutputParser()
         )
 
+    @staticmethod
+    def _source_names(documents: list[Document]) -> list[str]:
+        """Return the distinct source file names of the retrieved chunks."""
+        return sorted(
+            {os.path.basename(doc.metadata.get("source", "?")) for doc in documents}
+        )
+
+    def sources(self, question: str) -> list[str]:
+        """Return the source files a query would be grounded in."""
+        return self._source_names(self._retrieve(question))
+
     def answer(
         self,
         question: str,
@@ -103,10 +114,7 @@ class RAGService:
         answer = self._chain(question).invoke(
             {"question": question, "history": history or []}
         )
-        sources = sorted(
-            {os.path.basename(doc.metadata.get("source", "?")) for doc in documents}
-        )
-        return RAGAnswer(answer=answer, sources=sources)
+        return RAGAnswer(answer=answer, sources=self._source_names(documents))
 
     def stream(
         self,

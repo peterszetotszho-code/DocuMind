@@ -4,10 +4,16 @@ import hashlib
 
 import streamlit as st
 
+from langchain_core.chat_history import InMemoryChatMessageHistory
+
 from rag_dialogue.auth import authenticate
 from rag_dialogue.config import settings
 from rag_dialogue.i18n import LANGUAGE_LABELS, SUPPORTED_LANGUAGES, translate
-from rag_dialogue.knowledge_base import update_knowledge_base
+from rag_dialogue.knowledge_base import (
+    delete_document,
+    list_uploaded_files,
+    update_knowledge_base,
+)
 from rag_dialogue.rag_service import RAGService
 
 st.set_page_config(
@@ -75,8 +81,8 @@ if "username" not in st.session_state:
     st.session_state.username = ""
 if "role" not in st.session_state:
     st.session_state.role = ""
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = InMemoryChatMessageHistory()
 if "upload_snapshot" not in st.session_state:
     st.session_state.upload_snapshot = ()
 
@@ -86,7 +92,7 @@ def logout() -> None:
     st.session_state.authenticated = False
     st.session_state.username = ""
     st.session_state.role = ""
-    st.session_state.messages = []
+    st.session_state.chat_history = InMemoryChatMessageHistory()
     st.session_state.upload_snapshot = ()
 
 
@@ -137,6 +143,18 @@ with st.sidebar:
 
                 st.session_state.upload_snapshot = entries
 
+            # Delete a document from the knowledge base.
+            st.subheader(t("delete_file"))
+            files = list_uploaded_files()
+            if files:
+                selected = st.selectbox(t("select_file"), [path.name for path in files])
+                if st.button(t("delete")):
+                    delete_document(selected)
+                    st.success(t("delete_success"))
+                    st.rerun()
+            else:
+                st.caption(t("no_files"))
+
         if st.button(t("logout")):
             logout()
             st.rerun()
@@ -164,25 +182,24 @@ if not st.session_state.authenticated:
 
 
 # Chat interface (available to all authenticated users).
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+for message in st.session_state.chat_history.messages:
+    with st.chat_message("user" if message.type == "human" else "assistant"):
+        st.markdown(message.content)
 
 service = RAGService()
 
 if prompt := st.chat_input(t("chat_placeholder")):
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.chat_history.add_user_message(prompt)
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    history = [
-        ("human" if message["role"] == "user" else "ai", message["content"])
-        for message in st.session_state.messages[:-1]
-    ]
+    history = st.session_state.chat_history.messages[:-1]
 
     with st.chat_message("assistant"):
         with st.spinner(t("thinking")):
-            answer = service.answer(prompt, history=history)
-        st.markdown(answer)
+            answer = st.write_stream(service.stream(prompt, history=history))
+        sources = service.sources(prompt)
+        if sources:
+            st.caption(f"{t('sources')}: " + ", ".join(sources))
 
-    st.session_state.messages.append({"role": "assistant", "content": answer})
+    st.session_state.chat_history.add_ai_message(answer)

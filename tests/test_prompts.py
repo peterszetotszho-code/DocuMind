@@ -20,8 +20,8 @@ def test_system_template_distinguishes_facts_from_examples():
 
 def test_system_template_handles_recommendations():
     lowered = SYSTEM_TEMPLATE.lower()
-    assert "recommendation" in lowered
-    assert "advice" in lowered
+    assert "recommend" in lowered
+    assert "disclaimer" in lowered
 
 
 def test_rag_prompt_declares_context_question_and_history():

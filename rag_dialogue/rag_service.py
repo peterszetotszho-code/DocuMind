@@ -19,6 +19,7 @@ from rag_dialogue.vector_store import get_retriever
 # single fact, so we retrieve a larger context window.
 _LIST_KEYWORDS = (
     "哪些", "列出", "所有", "全部", "有幾", "種類", "多少", "幾個",
+    "分別", "各自", "幾份", "幾種",
     "list", "what are", "enumerate", "how many",
 )
 

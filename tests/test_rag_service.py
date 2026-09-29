@@ -56,5 +56,6 @@ def test_is_list_question_detects_enumeration():
     assert is_list_question("資料中有哪些保險產品")
     assert is_list_question("列出所有保障計劃")
     assert is_list_question("list all products")
+    assert is_list_question("這三份產品分別有什麼用")
     assert not is_list_question("vhis有什麼特點")
     assert not is_list_question("什麼人適合買")

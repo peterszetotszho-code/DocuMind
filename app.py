@@ -205,6 +205,25 @@ with st.sidebar:
                 )
                 st.rerun()
 
+            if st.button(t("delete_chat")):
+                st.session_state.conversations = [
+                    conversation
+                    for conversation in st.session_state.conversations
+                    if conversation["id"] != chosen_conversation["id"]
+                ]
+                if st.session_state.conversations:
+                    st.session_state.current_id = st.session_state.conversations[-1]["id"]
+                    st.session_state.chat_history = _history_from_messages(
+                        st.session_state.conversations[-1]["messages"]
+                    )
+                else:
+                    conversation = new_conversation()
+                    st.session_state.conversations = [conversation]
+                    st.session_state.current_id = conversation["id"]
+                    st.session_state.chat_history = InMemoryChatMessageHistory()
+                save_conversations(st.session_state.username, st.session_state.conversations)
+                st.rerun()
+
         # Only administrators may upload documents into the knowledge base.
         if st.session_state.role == "admin":
             st.header(t("kb_header"))

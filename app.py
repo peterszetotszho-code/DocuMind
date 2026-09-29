@@ -6,6 +6,7 @@ import streamlit as st
 
 from langchain_core.chat_history import InMemoryChatMessageHistory
 
+from rag_dialogue.agent import run_agent
 from rag_dialogue.auth import authenticate
 from rag_dialogue.config import settings
 from rag_dialogue.i18n import LANGUAGE_LABELS, SUPPORTED_LANGUAGES, translate
@@ -113,6 +114,7 @@ with st.sidebar:
 
     if st.session_state.authenticated:
         st.caption(f"{t('logged_in_as')}: {t('role_' + st.session_state.role)}")
+        st.checkbox(t("agent_mode"), key="use_agent")
 
         # Only administrators may upload documents into the knowledge base.
         if st.session_state.role == "admin":
@@ -197,9 +199,13 @@ if prompt := st.chat_input(t("chat_placeholder")):
 
     with st.chat_message("assistant"):
         with st.spinner(t("thinking")):
-            answer = st.write_stream(service.stream(prompt, history=history))
-        sources = service.sources(prompt)
-        if sources:
-            st.caption(f"{t('sources')}: " + ", ".join(sources))
+            if st.session_state.get("use_agent", False):
+                answer = run_agent(prompt)
+                st.markdown(answer)
+            else:
+                answer = st.write_stream(service.stream(prompt, history=history))
+                sources = service.sources(prompt)
+                if sources:
+                    st.caption(f"{t('sources')}: " + ", ".join(sources))
 
     st.session_state.chat_history.add_ai_message(answer)

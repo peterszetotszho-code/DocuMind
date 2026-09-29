@@ -3,6 +3,7 @@ langchain-openai
 langchain-ollama
 langchain-chroma
 langchain-text-splitters
+langgraph
 python-dotenv
 pypdf
 streamlit

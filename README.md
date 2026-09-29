@@ -1,29 +1,29 @@
-# RAG Dialogue
+# DocuMind
 
 A retrieval-augmented generation (RAG) knowledge-base assistant built with
-LangChain. Upload documents, index them into a local vector store, and chat
-with an LLM that answers using your documents as context.
+LangChain and LangGraph. Upload documents, index them into a local vector
+store, and ask questions — answered using your documents as context. Includes
+a ReAct agent, per-user conversation history, and role-based access.
 
 ## Features
 
-- Upload `.txt`, `.md`, and `.pdf` documents through a Streamlit UI.
-- Uploads are indexed automatically on upload; no separate button is needed.
-- Bilingual UI: switch between English and Traditional Chinese.
-- Uploaded files are stored backend-side; file names are not shown in the UI.
-- Incremental indexing: files are hashed (MD5) so unchanged uploads are skipped.
-- Offline flow: load documents, split into chunks, embed, and store in Chroma.
-- Online flow: retrieve the most relevant chunks for each question.
-- Multi-turn chat with conversation history.
+- Upload `.txt`, `.md`, and `.pdf` documents and index them automatically.
+- RAG Q&A with source citations and token-by-token streaming.
+- ReAct agent mode with search and file-listing tools (toggle in the sidebar).
+- Role-based access: admins upload and delete documents, users only ask.
+- Per-user conversation history, persisted to JSON, with new / switch / delete.
+- Multi-turn context, bilingual UI (English / Traditional Chinese).
+- Incremental indexing with MD5 deduplication.
 
 ## Tech stack
 
-| Layer        | Tool                                        |
-| ------------ | ------------------------------------------- |
-| LLM          | DeepSeek (`deepseek-chat`) via OpenAI API   |
-| Embeddings   | Ollama (`bge-m3`, multilingual), local       |
-| Vector store | Chroma, persisted locally                   |
-| Framework    | LangChain                                   |
-| UI           | Streamlit                                   |
+| Layer        | Tool                                          |
+| ------------ | --------------------------------------------- |
+| LLM          | DeepSeek (`deepseek-chat`) via OpenAI API     |
+| Embeddings   | Ollama (`bge-m3`, multilingual), local        |
+| Vector store | Chroma, persisted locally                     |
+| Framework    | LangChain (LCEL) + LangGraph (ReAct agent)    |
+| UI           | Streamlit                                     |
 
 ## Setup
 
@@ -61,28 +61,30 @@ streamlit run app.py
 
 ## Usage
 
-1. Pick a language (English / 繁體中文) from the sidebar.
-2. Upload one or more documents; they are saved and indexed automatically.
-3. Ask questions in the chat box. Answers are generated from the retrieved
-   document chunks.
+1. Log in (default accounts: `admin / 123456` or `user / 666666`).
+2. As an admin, upload documents to index them.
+3. Ask questions in the chat box; switch on Agent mode at the bottom of the
+   sidebar for a tool-using ReAct agent.
 
 ## Project structure
 
 ```
 app.py                          Streamlit entry point
 rag_dialogue/
+    agent.py                    ReAct agent (search + list-files tools)
+    auth.py                     Login and role-based access
     config.py                   Environment-driven settings
-    llm.py                      DeepSeek chat model factory
-    embeddings.py               Ollama embedding factory
-    md5_util.py                 File hashing for deduplication
+    conversation_store.py       Per-user conversation persistence (JSON)
     document_loaders.py         txt / md / pdf loaders
-    text_splitter.py            Document chunking
-    vector_store.py             Chroma store and retrieval
-    knowledge_base.py           Incremental offline indexing
-    prompts.py                  RAG prompt templates
-    history.py                  In-memory conversation history
+    embeddings.py               Ollama embedding factory
     i18n.py                     UI translations (English / Traditional Chinese)
-    rag_service.py              Retrieval + generation orchestration
+    knowledge_base.py           Incremental indexing + document deletion
+    llm.py                      DeepSeek chat model factory
+    md5_util.py                 File hashing for deduplication
+    prompts.py                  RAG prompt templates
+    rag_service.py              LCEL retrieval + generation
+    text_splitter.py            Document chunking
+    vector_store.py             Chroma store, retriever, deletion
 tests/                          Unit tests
 ```
 
@@ -96,8 +98,6 @@ python -m pytest
 
 - The embedding model runs locally through Ollama and does not require an API
   key. The DeepSeek key is only used for answer generation.
-- `bge-m3` is used for embeddings because it supports Chinese (unlike
-  `nomic-embed-text`, which is English-centric). For English-only documents,
-  `nomic-embed-text` is a faster alternative.
-- When a file changes, its new chunks are appended to the vector store. For
-  production use, replace this with a per-source delete-and-reindex step.
+- `bge-m3` is used for embeddings because it supports Chinese well.
+- Authentication is demo-grade (salted SHA-256 hashes and hardcoded accounts);
+  use a real authentication system for production.

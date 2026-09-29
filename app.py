@@ -202,18 +202,23 @@ if prompt := st.chat_input(t("chat_placeholder")):
         st.markdown(prompt)
 
     history = st.session_state.chat_history.messages[:-1]
+    language = (
+        "繁體中文（Traditional Chinese），不要使用簡體字"
+        if st.session_state.lang == "zh-Hant"
+        else "the language of the question"
+    )
 
     with st.chat_message("assistant"):
         with st.spinner(t("thinking")):
             if st.session_state.get("use_agent", False):
                 logger = AgentCallLogger()
-                answer = st.write_stream(stream_agent(prompt, logger))
+                answer = st.write_stream(stream_agent(prompt, logger, language))
                 if logger.steps:
                     with st.expander(t("agent_steps")):
                         for step in logger.steps:
                             st.write(step)
             else:
-                answer = st.write_stream(service.stream(prompt, history=history))
+                answer = st.write_stream(service.stream(prompt, history=history, language=language))
                 sources = service.sources(prompt)
                 if sources:
                     st.caption(f"{t('sources')}: " + ", ".join(sources))

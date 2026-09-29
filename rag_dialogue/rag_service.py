@@ -81,13 +81,14 @@ class RAGService:
             return RunnableLambda(self._retriever)
         return get_retriever(k=self._retrieval_k(question))
 
-    def _chain(self, question: str) -> Runnable:
+    def _chain(self, question: str, language: str) -> Runnable:
         """Build the LCEL chain: retriever | prompt | llm | StrOutputParser."""
         return (
             {
                 "context": itemgetter("question") | self._retriever_runnable(question) | _format_docs,
                 "question": itemgetter("question"),
                 "history": itemgetter("history"),
+                "language": itemgetter("language"),
             }
             | RAG_PROMPT
             | self.llm
@@ -109,11 +110,12 @@ class RAGService:
         self,
         question: str,
         history: list[BaseMessage] | None = None,
+        language: str = "the language of the question",
     ) -> RAGAnswer:
         """Retrieve, generate an answer, and return it with its sources."""
         documents = self._retrieve(question)
-        answer = self._chain(question).invoke(
-            {"question": question, "history": history or []}
+        answer = self._chain(question, language).invoke(
+            {"question": question, "history": history or [], "language": language}
         )
         return RAGAnswer(answer=answer, sources=self._source_names(documents))
 
@@ -121,8 +123,9 @@ class RAGService:
         self,
         question: str,
         history: list[BaseMessage] | None = None,
+        language: str = "the language of the question",
     ) -> Iterator[str]:
         """Yield the answer token by token for a streaming UI."""
-        yield from self._chain(question).stream(
-            {"question": question, "history": history or []}
+        yield from self._chain(question, language).stream(
+            {"question": question, "history": history or [], "language": language}
         )

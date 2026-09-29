@@ -7,6 +7,7 @@ SYSTEM_TEMPLATE = (
     "provided below.\n\n"
     "Context:\n{context}\n\n"
     "Guidelines:\n"
+    "- Respond in {language}.\n"
     "- Answer naturally and concisely in the language of the question. Do not "
     "open with phrases like 'according to the document' or 'based on the "
     "provided files'.\n"

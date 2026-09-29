@@ -49,17 +49,19 @@ class AgentCallLogger(BaseCallbackHandler):
         self.steps.append(f"📄 工具結果：{str(output)[:200]}")
 
 
-def get_agent():
+def get_agent(language: str = "the language of the question"):
     """Build a ReAct agent with the knowledge-base tools."""
+    prompt = f"You are a helpful assistant. Respond in {language}."
     return create_react_agent(
         get_llm(),
         [search_knowledge_base, list_knowledge_base_files],
+        prompt=prompt,
     )
 
 
-def run_agent(question: str) -> str:
+def run_agent(question: str, language: str = "the language of the question") -> str:
     """Run the agent (non-streaming) and return its final answer."""
-    agent = get_agent()
+    agent = get_agent(language)
     result = agent.invoke({"messages": [("user", question)]})
     for message in reversed(result["messages"]):
         if isinstance(message, AIMessage) and message.content:
@@ -70,13 +72,14 @@ def run_agent(question: str) -> str:
 def stream_agent(
     question: str,
     logger: AgentCallLogger | None = None,
+    language: str = "the language of the question",
 ) -> Iterator[str]:
     """Stream the agent's final answer token by token.
 
     Tool calls are intercepted by the provided ``logger`` (or a fresh one).
     """
     logger = logger or AgentCallLogger()
-    agent = get_agent()
+    agent = get_agent(language)
     for chunk, _metadata in agent.stream(
         {"messages": [("user", question)]},
         stream_mode="messages",
